@@ -37,5 +37,3 @@ Haptics are currently supported only for Assetto Corsa / Assetto Corsa Competizi
 ## Credits
 Uses the [vJoy](https://github.com/jshafer817/vJoy) virtual joystick driver (MIT).
 
-## License
-MIT
