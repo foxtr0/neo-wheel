@@ -1,4 +1,81 @@
-import ctypes, os, struct
+import ctypes, os, struct, winreg
+
+import shutil
+
+
+def _vjoy_dirs_from_registry():
+    base = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+    for view in (winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY):
+        try:
+            root = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, base, 0,
+                                  winreg.KEY_READ | view)
+        except OSError:
+            continue
+        with root:
+            i = 0
+            while True:
+                try:
+                    name = winreg.EnumKey(root, i)
+                except OSError:
+                    break
+                i += 1
+                try:
+                    with winreg.OpenKey(root, name) as k:
+                        try:
+                            disp = winreg.QueryValueEx(k, "DisplayName")[0]
+                        except OSError:
+                            continue
+                        if "vjoy" not in str(disp).lower():
+                            continue
+                        for field in ("InstallLocation", "Inno Setup: App Path"):
+                            try:
+                                yield winreg.QueryValueEx(k, field)[0]
+                            except OSError:
+                                pass
+                        try:   # fall back to the folder holding the uninstaller
+                            u = winreg.QueryValueEx(k, "UninstallString")[0]
+                            yield os.path.dirname(u.strip('"'))
+                        except OSError:
+                            pass
+                except OSError:
+                    continue
+
+def find_installed_dll(dll_name="vJoyInterface.dll"):
+    """Locate the DLL in the user's vJoy install, matching Python's bitness."""
+    arch = "x64" if struct.calcsize("P") * 8 == 64 else "x86"
+
+    dirs = list(_vjoy_dirs_from_registry())                       # 1) registry
+    for env in ("ProgramFiles", "ProgramW6432", "ProgramFiles(x86)"):   # 2) default paths
+        root = os.environ.get(env)
+        if root:
+            dirs.append(os.path.join(root, "vJoy"))
+
+    for d in dirs:
+        d = d.strip().strip('"')
+        for p in (os.path.join(d, arch, dll_name), os.path.join(d, dll_name)):
+            if os.path.exists(p):
+                return p
+    return None
+
+def ensure_dll(folder, dll_name="vJoyInterface.dll"):
+    local = os.path.join(folder, dll_name)
+    src = find_installed_dll(dll_name)
+    if src is None:
+        if os.path.exists(local):
+            return local           
+        raise FileNotFoundError(
+            "vJoy not found. Install vJoy, or place vJoyInterface.dll next to myvjoy.py")
+    try:
+        if (not os.path.exists(local)
+                or os.path.getsize(local) != os.path.getsize(src)
+                or os.path.getmtime(local) < os.path.getmtime(src)):
+            shutil.copy2(src, local)
+            print("Copied vJoyInterface.dll from", src)
+    except OSError as e:
+        print("Could not copy DLL (%s), using existing copy" % e)
+    return local
+
+
 
 HID_X, HID_Y, HID_Z = 0x30, 0x31, 0x32
 HID_RX, HID_RY, HID_RZ = 0x33, 0x34, 0x35
@@ -8,9 +85,7 @@ class VJoy:
     def __init__(self, device_id=1, dll_name="vJoyInterface.dll"):
         if struct.calcsize("P") * 8 != 64:
             print("WARNING: 32-bit Python, you need the x86 DLL")
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), dll_name)
-        if not os.path.exists(path):
-            raise FileNotFoundError(path)
+        path = ensure_dll(os.path.dirname(os.path.abspath(__file__)), dll_name)
         self.dll = ctypes.CDLL(path)
         d = self.dll
         d.vJoyEnabled.restype = ctypes.c_bool
