@@ -1,3 +1,0 @@
-pyvjoy 
-aiohttp
-cryptography
