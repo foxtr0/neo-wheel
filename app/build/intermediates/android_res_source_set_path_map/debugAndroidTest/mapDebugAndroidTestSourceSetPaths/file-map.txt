@@ -1,5 +1,0 @@
-com.example.neo_wheel.test.app-updated_navigation_xml-0 E:\Projects\Android\neowheel\app\build\generated\updated_navigation_xml\debugAndroidTest
-com.example.neo_wheel.test.app-packageDebugAndroidTestResources-1 E:\Projects\Android\neowheel\app\build\intermediates\incremental\debugAndroidTest\packageDebugAndroidTestResources\merged.dir
-com.example.neo_wheel.test.app-packageDebugAndroidTestResources-2 E:\Projects\Android\neowheel\app\build\intermediates\incremental\debugAndroidTest\packageDebugAndroidTestResources\stripped.dir
-com.example.neo_wheel.test.app-debugAndroidTest-3 E:\Projects\Android\neowheel\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources
-gradleHome-0 C:\Users\sukh\.gradle
