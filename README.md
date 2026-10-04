@@ -31,13 +31,8 @@ Phone and PC must be on the same network. A phone hotspot or USB tethering
 gives the lowest latency.
 
 ## Haptics
-Set `ENABLE_HAPTICS = True` at the top of `server.py`. Currently reads
-Assetto Corsa shared memory. Strengths are tuned by feel, set `DEBUG = True`
-to see live values.
+Haptics are currently supported only for Assetto Corsa / Assetto Corsa Competizione.
 
-## Security note
-The server accepts unauthenticated UDP packets on port 5005. Use it on a
-trusted home network only.
 
 ## Credits
 Uses the [vJoy](https://github.com/jshafer817/vJoy) virtual joystick driver (MIT).
